@@ -15,14 +15,14 @@ And then go to the corresponding run_models_scripts directory
 
 Finally, execute the corresponding bash script of the model you want to run
 
-**PyTorch Version**: run the cross-time GRU model
+**PyTorch Version**: run the cross-time GRU model for example
 ```
 $ cd PyTorch_Ver
 $ cd run_models_scripts
 $ ./run_gru_time.sh
 ```
 
-**TensorFlow Version**: run the cross-sectional LSTM model
+**TensorFlow Version**: run the cross-sectional LSTM model for example
 ```
 $ cd TensorFlow_Ver
 $ cd run_models_scripts
