@@ -1,5 +1,8 @@
 #!/bin/bash
 
+./mk_folds.sh fim time
+./mk_folds.sh fim_index index
+
 for i in 01 06 12;
 do
     ./mk_folds.sh mlp${i} time

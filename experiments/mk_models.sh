@@ -1,5 +1,8 @@
 #!/bin/bash
 
+mkdir fim
+mkdir fim_index
+
 for i in 01 06 12;
 do
     mkdir mlp${i}
