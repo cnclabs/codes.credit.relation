@@ -1,0 +1,20 @@
+{
+    "feature_size": 14,
+    "window_size": 12,
+
+    "model_version": "lstm-type2",
+    "layer_norm": "off",
+    "batch_norm": "on",
+    "label_type": "cum",
+    "cum_labels": 8,
+    "lstm_num_units": 64,
+
+    "learning_rate": 1e-4,
+    "batch_size": 256,
+    "num_epochs": 20,
+    "dropout_rate": 0.5,
+    "weight_decay": 1e-5,
+
+    "buffer_size": 1e6,
+    "save_summary_steps": 100
+}
