@@ -11,7 +11,6 @@ def evaluate_sess(model, dataloader, model_dir, params=None):
     """Train the model on `num_steps` batches."""
     # write file
     predict_path = os.path.join(model_dir, 'pred.csv')
-    print(params.cum_labels)
     header_str = 'date,id,' + ','.join(
             "p_cum_{:02d}".format(v + 1) for v in range(params.cum_labels)) + '\n'
 
