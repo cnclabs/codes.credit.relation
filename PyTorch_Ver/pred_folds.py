@@ -33,7 +33,7 @@ def predict_folds(exp_dir, data_file, pred_file, label_dir, label_file, split_ty
         label_fold_dir = os.path.join(label_dir, split_type + "_fold_{:02d}".format(fold + 1))
 
         if pred_file == "pred.csv":
-            pred_cmd = '{python} predict.py\
+            pred_cmd = '{python} ../predict.py\
                     --model_dir {exp_fold}\
                     --data_dir {data_dir}\
                     --data_file {data_file}\
@@ -46,7 +46,7 @@ def predict_folds(exp_dir, data_file, pred_file, label_dir, label_file, split_ty
                             device=device)
             check_call(pred_cmd, shell=True)
 
-        score_cmd = '{python} report.py\
+        score_cmd = '{python} ../report.py\
                 --pred_file {pred_fold}/{pred_file}\
                 --label_file {label_fold}/{label_file}'.format(
                         python=PYTHON,

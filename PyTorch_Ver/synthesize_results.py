@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     all_results = pd.DataFrame(all_results, columns=column_names)
     all_results.loc['average'] = all_results.mean(axis=0)
-    all_results.transpose().to_csv(args.parent_dir+'/results_new.csv')
+    all_results.transpose().to_csv(args.parent_dir+'/results_pt.csv')
     print(all_results.transpose())
 
     # Display the table to terminal
