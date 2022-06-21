@@ -26,7 +26,7 @@ Neural network models have been implemented by two different ML frameworks: PyTo
 * Python 3.7
 * TensorFlow 1.15.0
 
-Other Packages: Check the **requirements.txt** file in the corresponding folder (PyTorch_Ver & TensorFlow Version)
+Other Packages: Check the **requirements.txt** file in the corresponding folder (PyTorch_Ver & TensorFlow_Ver)
 
 # How to Run the Program
 
