@@ -2,10 +2,10 @@
 
 for i in {01..13};
 do
-    python main.py --model_dir=../../experiments/lstm01_index/index_fold_${i} --data_dir=../../data/8_labels_index/len_01/index_fold_${i} --device=cpu
+    python ../main.py --model_dir=../../experiments/lstm01_index/index_fold_${i} --data_dir=../../data/8_labels_index/len_01/index_fold_${i} --device=cpu
 done
-python pred_folds.py --exp_dir=../../experiments/lstm01_index/ --label_dir=../../data/8_labels_index/len_01/
-python synthesize_results.py --parent_dir=../../experiments/lstm01_index
+python ../pred_folds.py --exp_dir=../../experiments/lstm01_index/ --label_dir=../../data/8_labels_index/len_01/
+python ../synthesize_results.py --parent_dir=../../experiments/lstm01_index
 
 for i in {01..13};
 do
