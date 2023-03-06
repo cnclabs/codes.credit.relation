@@ -1,0 +1,5 @@
+codes/__pycache__/*
+
+experiments*/*/*/last_weights/checkpoint
+
+test*.ipynb
