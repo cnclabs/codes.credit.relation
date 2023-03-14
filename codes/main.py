@@ -248,8 +248,8 @@ def evaluate(model, params, eval_inputs, device, relation_static = None):
         metrics['batch_aucs'] = torch.mean(metrics['batch_aucs'], 0, keepdim=True) # [4, 8] -> [1, 8]
         metrics['batch_loss'] = torch.mean(metrics['batch_loss'], 0, keepdim=True) # [4] -> [1]
     
-    metrics['aucs'] = torch.cat((metrics['aucs'], metrics['batch_aucs']), 0) # [1, 8]
-    metrics['loss'] = torch.cat((metrics['loss'], metrics['batch_loss']), 0) # [1]
+        metrics['aucs'] = torch.cat((metrics['aucs'], metrics['batch_aucs']), 0) # [1, 8]
+        metrics['loss'] = torch.cat((metrics['loss'], metrics['batch_loss']), 0) # [1]
     
     metrics['aucs'] = torch.mean(metrics['aucs'], 0)
     metrics['loss'] = torch.mean(metrics['loss'])
