@@ -2,9 +2,9 @@
 
 **Project Description**
 
-Employ machine learning techniques to estimate the **term structure of cumulative default probabilities** — a structured estimation that contains default probabilities from short-term to long-term periods (E.g., 1, 3, 6, 12, ..., 60 months)
+Employ and design an **explainable** model to estimate the **term structure of cumulative default probabilities** — a structured estimation that contains default probabilities from short-term to long-term periods (E.g., 1, 3, 6, 12, ..., 60 months)
 
-**Current Implemented Models**
+**Previous Works**
 
 * Multiperiod Corporate Default Prediction—A Forward Intensity Approach (FIM)
   * Journal of Econometrics, 2012
@@ -14,48 +14,53 @@ Employ machine learning techniques to estimate the **term structure of cumulativ
   * Paper Link: https://epubs.siam.org/doi/abs/10.1137/1.9781611977172.36
   * Neural Network Models: MLP, RNNs: LSTM & GRU
 
+**Current Implemented Models**
+
+* ADGAT Model
+  * Modeling the Momentum Spillover Effect for Stock Prediction via Attribute-Driven Graph Attention Networks (AAAI, 2021)
+  * Paper Link: https://ojs.aaai.org/index.php/AAAI/article/view/16077
+  * Official Released Code: https://github.com/RuichengFIC/ADGAT
+
 # Environment
 
 Neural network models have been implemented by two different ML frameworks: PyTorch & TensorFlow 
 
 **PyTorch Version**
 * Python 3.8
-* PyTorch 1.10.2
+* PyTorch 1.11.0
 
-**TensorFlow Version**
-* Python 3.7
-* TensorFlow 1.15.0
-
-Other Packages: Check the **requirements.txt** file in the corresponding folder (PyTorch_Ver & TensorFlow_Ver)
+Other Packages: Check the **requirements.txt** file in the corresponding folder
 
 # How to Run the Program
 
-First, go to the data directory and execute the get_data.sh script to download data (Refer to Dataset Description for more information)
-
+First, go to the data directory and execute the get_data.sh script to download complete data (Refer to Dataset Description for more information)
+(warning : the full dataset cannot be loaded in the model due to the limit of CUDA memory)
 ```
-$ cd data
+$ cd codes/data
 # Make sure you are on server cfda4
-$ ./get_data.sh
+$ bash get_data.sh
+```
+or create the sample data from following steps
+```
+$ cd codes/build_sampling/preprocess
+$ bash sampling.sh
 ```
 
-Second, choose which version of code you want to use: PyTorch or TensorFlow
+Second, choose which dataset you want to use: cross-section or cross-time
 
 And then go to the corresponding **run_models_scripts** directory
 
 Finally, execute the corresponding bash script of the model you want to run
 
-**PyTorch Version** (no FIM): run the cross-time GRU model for example
+**Cross-section** : run on the cross-sction dataset
 ```
-$ cd PyTorch_Ver
-$ cd run_models_scripts
-$ ./run_gru_time.sh
+$ cd codes/run_models_scripts
+$ bash ./run_gru_index.sh
 ```
-
-**TensorFlow Version**: run the cross-sectional LSTM model for example
+**Cross-time** : run on the cross-time dataset
 ```
-$ cd TensorFlow_Ver
-$ cd run_models_scripts
-$ ./run_lstm_index.sh
+$ cd codes/run_models_scripts
+$ bash ./run_gru_time.sh
 ```
 Note: Just ignore the tf warnings shown on the terminal
 
@@ -86,20 +91,6 @@ A real-world default and bankruptcy dataset provided by **CRI**, which is public
 * Complete processed data for above mentioned implemented models: **cfda4**:/tmp2/cywu/default_cumulative/data/processed
   * 8_labels_index: Cross-sectional Experiment
   * 8_labels_time: Cross-time Experiment
-
-# Ideas & Project Plan
-**Main Idea**
-
-Develop a **graph-based** machine learning algorithm that can incorporate the **relational information** between US public companies into the model to make **correlated default predictions**
-
-**Project Plan (To-do list)**
-1. Apply ADGAT model to the CRI dataset
-  * ADGAT Model
-    * Modeling the Momentum Spillover Effect for Stock Prediction via Attribute-Driven Graph Attention Networks (AAAI, 2021)
-    * Paper Link: https://ojs.aaai.org/index.php/AAAI/article/view/16077
-    * Official Released Code: https://github.com/RuichengFIC/ADGAT
-2. Design a more explainable model
-3. Find & implement other suitable term structure baseline default prediction models in Finance area
 
 # Other Relevant Works
 * Multi-period Corporate Default Prediction with Stochastic Covariates
