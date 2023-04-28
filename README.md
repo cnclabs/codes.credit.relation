@@ -49,6 +49,7 @@ $ bash get_data.sh
 ```
 or create the sample data from following steps
 ```
+# The build_sampling folder is not attached in github, get it from cfda4:/tmp2/yhchen/Default_Prediction_Research_Project/explainable_credit/codes/build_sampling
 $ cd codes/build_sampling/preprocess
 $ bash sampling.sh
 ```
