@@ -100,7 +100,7 @@ A real-world default and bankruptcy dataset provided by **CRI**, which is public
   * 8_labels_index: Cross-sectional Experiment
   * 8_labels_time: Cross-time Experiment
 
-# Current Results
+# Current Best Results
 We anticipate that the inclusion of the ADGAT relation model will enhance the results with an explanation that can be understood. After fine-tuning the parameters, we achieved the following optimal outcomes
 
 ## The SDM model without relation vs SDM model with relation
