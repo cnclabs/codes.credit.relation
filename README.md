@@ -101,18 +101,33 @@ A real-world default and bankruptcy dataset provided by **CRI**, which is public
   * 8_labels_time: Cross-time Experiment
 
 # Current Best Results
-We anticipate that the inclusion of the ADGAT relation model will enhance the results with an explanation that can be understood. After fine-tuning the parameters, we achieved the following optimal outcomes
-
-## The SDM model without relation vs SDM model with relation
-
-* We sample 500 companies with cross-section dataset
-* adgat=incorporate agdat relation model
+We anticipate that the inclusion of the ADGAT relation model will enhance the results with an explanation that can be understood. To obtain the best performance of the model, we fine-tune the model with following parameter :
 * hidden size = {32, 64, 128}
 * learning rate = {1e-03, 1e-04, 1e-05}
 * weight decay = {1e-04, 1e-05, 1e-06}
 * Number of Layer = 1
 * batch size = {1, 5, 10, 15}
 * patience = {20, 50, 75, 100}
+* max epoch = 300
+
+## The SDM model without relation vs SDM model with relation (The results is experiments on cross-section dataset with 500 sample companies)
+
+For model without relation, the best combination is :
+* hidden size = 64
+* learning rate = 1e-03(window_size=12), 1e-04(window_size=1, 6)
+* weight decay = 1e-05
+* Number of Layer = 1
+* batch size = 1(window_size=6), 5(window_size=12), 10(window_size=1)
+* patience = 75
+* max epoch = 300
+
+For model with relation, the best combination is :
+* hidden size = 64
+* learning rate = 1e-03(window_size=6, 12), 1e-04(window_size=1)
+* weight decay = 1e-05
+* Number of Layer = 1
+* batch size = 1(window_size=12)
+* patience = 20(window_size=1, 6), 75(window_size=12)
 * max epoch = 300
 
 AR :
