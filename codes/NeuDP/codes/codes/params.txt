@@ -1,0 +1,15 @@
+	bn:
+	  weight: Parameters: 168
+	  bias: Parameters: 168
+	sequence_encoder:
+	  gru_cell:
+	    x2h:
+	      W: Parameters: 2688
+	      b: Parameters: 192
+	    h2h:
+	      W: Parameters: 12288
+	      b: Parameters: 192
+	logit_f:
+	  weight: Parameters: 576
+	  bias: Parameters: 9
+Total Parameters: 16281
