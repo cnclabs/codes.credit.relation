@@ -1,0 +1,17 @@
+{
+    "model_dir": "/home/ybtu/codes.credit.relation.dev/NeuDP/experiments/expand_len/fold_20/NeuDP_12_expand_len_lstm32_lr0.01_wd0.00001",
+    "model_name": "NeuDP",
+    "data_dir": "/home/cwlin/explainable_credit/data/expand_len/time_fold_20",
+    "device": "0",
+    "all_company_ids_path": "/home/cwlin/explainable_credit/data/edge_file/all_company_ids.csv",
+    "feature_size": 14,
+    "window_size": 12,
+    "cum_labels": 8,
+    "num_epochs": 8,
+    "patience": 20,
+    "batch_size": 1,
+    "learning_rate": 0.01,
+    "weight_decay": 1e-05,
+    "gamma": 0.9,
+    "lstm_num_units": 32
+}

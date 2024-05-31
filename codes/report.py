@@ -1,0 +1,162 @@
+import os
+import argparse
+import numpy as np
+import pandas as pd
+from sklearn.metrics import roc_auc_score
+from subprocess import check_call
+
+from utils.config import DATA_DIR, WINDOW_SIZE
+from utils.model_utils import save_dict_to_json
+
+from main import create_experiment_directory
+from ar_cap import cap_ar_score
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    # experiments settings
+    parser.add_argument('--model_name', choices=['NeuDP_GAT', 'NeuDP'], required=True)
+    parser.add_argument('--experiment_type', required=True, choices=["index", "time", "expand_len"], help="dataset type")
+    parser.add_argument('--fold', required=True, type=int, help="fold number of the data")
+
+    # training settings
+    parser.add_argument('--batch_size', default=1, type=int)
+    parser.add_argument('--learning_rate', default=0.001, type=float, help='1e-3, 1e-4, 1e-5')
+    parser.add_argument('--weight_decay', default=0.000001, type=float, help='1e-4, 1e-5, 1e-6, l2 regularization')
+    parser.add_argument('--gamma', default=0.9, type=float, help='exponential learning rate scheduler, lr = lr_0 * gamma ^ epoch')
+
+    # model architecture settings
+    parser.add_argument('--lstm_num_units', type=int, required=True)
+    ## for NeuDP_GAT
+    parser.add_argument('--cluster_setting', choices=['industry', 'kmeans'], default=None, help="company clustering method")
+    parser.add_argument('--n_cluster', default=None, help="number of cluster, e.g. 100, ./data_dir/cluster_100, that contains inner/outer edges and company_to_sector_idx.pkl")
+    parser.add_argument('--intra_gat_hidn_dim', type=int, default=None)
+    parser.add_argument('--inter_gat_hidn_dim', type=int, default=None)
+
+    parser.add_argument('--pred_file', required=True, help='prediction file')
+    parser.add_argument('--label_file', required=True, help='label file')
+
+    return parser.parse_args()
+
+def clean_data(file_path):
+    #FIXME: manually handle abnormal syntax in file
+    input_str = file_path.split('/')
+    filename = input_str[-1]
+    fixed_file = "/".join(input_str[:-1] + ['fixed_' + filename])
+    cmd = 'cat {} \
+            | sed "s/b\'//g" \
+            | sed "s/\'//g" > {}'.format(file_path, fixed_file)
+    check_call(cmd, shell=True)
+    return fixed_file
+
+def agg_rmse(y_pred, y_true, norm_factor=1, factor=1):
+    """
+    args:
+        y_pred: (np.array)
+        y_true: (np.array)
+        norm_factor: (np.array or constant)
+    """
+    # only keep items not inf
+    # because y_true could be zeros in some months
+    scores = np.setdiff1d(
+            (y_pred - y_true)**2 / (norm_factor)**2, 
+             np.inf) * (factor ** 2)
+    return np.sqrt(np.mean(scores))
+
+
+def main():
+
+    args = parse_args()
+    model_dir, data_dir = create_experiment_directory(args, DATA_DIR, WINDOW_SIZE)
+
+    pred_file = os.path.join(model_dir, args.pred_file)
+    label_file = os.path.join(data_dir, args.label_file)
+
+    file_type = label_file.split('/')[-1].split('_')[0]
+    # print(file_type)
+
+
+    # if '.gz' not in pred_file:
+    #     fixed_file = clean_data(pred_file)
+    # else:
+    #     fixed_file = pred_file
+
+    # file I/O
+    df_cpd = pd.read_csv(pred_file, index_col=False, engine='python')
+    df_cum = pd.read_csv(label_file, index_col=False, engine='python')
+
+    assert df_cpd.shape[0] == df_cum.shape[0], "Number of rows is different,\
+            plz check consistency of pred_file and label_file"
+
+    df_cpd['date'] = pd.to_datetime(df_cpd['date'])
+    df_cum['date'] = pd.to_datetime(df_cum['date'])
+    df_cpd['id'] = df_cpd['id'].astype('int32')
+    df_cum['id'] = df_cum['id'].astype('int32')
+    key_cols = ['id', 'date']
+
+    preds = [c for c in df_cpd.columns if 'p_cum' in c or 'x_cpd' in c]
+    label = [c for c in df_cum.columns if 'y_cum' in c]
+    df_cpd = df_cpd.loc[:, key_cols + preds]
+    df_cum = df_cum.loc[:, key_cols + label]
+    # print('Start to merge pred/label files')
+    df = pd.merge(left=df_cpd, right=df_cum, on=['id', 'date'])
+    # print('Merge done.')
+    assert df.shape[0] != 0, "No matched date/ID,\
+            plz check consistency of pred_file and label_file"
+
+    # FIXME: Other exit -> alive
+    df = df.replace({2:0})
+
+    # FIXME: Hard coded masking
+    mask_list = [pd.Timestamp(2017,12,1), pd.Timestamp(2017,10,1),
+                 pd.Timestamp(2017,7,1), pd.Timestamp(2017,1,1),
+                 pd.Timestamp(2016,1,1), pd.Timestamp(2015,1,1),
+                 pd.Timestamp(2014,1,1), pd.Timestamp(2013,1,1)]
+
+    metrics = {}
+    for i in range(len(label)):
+        ## ----------- Normal Metrics ----------- #
+        # FIXME: doesn't count any instance with -1 label
+        true_col = label[i]
+        pred_col = preds[i]
+        mask_date = (df['date'] < mask_list[i])
+        mask_invalid = (df[true_col] != -1)
+        final_mask = mask_date & mask_invalid
+
+        _df = df.loc[final_mask, ['date', pred_col, true_col]]
+
+        y_pred = _df[pred_col].values
+        y_true = _df[true_col].values
+        metrics["auc_{:02d}".format(i + 1)] = roc_auc_score(y_true, y_pred)
+        metrics["cap_{:02d}".format(i + 1)] = cap_ar_score(y_true, y_pred)
+        # print(metrics["cap_{:02d}".format(i + 1)])
+
+        ## ----------- Aggregated Metrics ----------- #
+        _df = _df.groupby('date')
+
+        size = _df.size().values
+        _df = _df.sum().reset_index()
+        # Num of exist companies of each month
+        y_pred = _df[pred_col].values
+        y_true = _df[true_col].values
+
+        metrics["rmse_{:02d}".format(i + 1)]   = agg_rmse(y_pred, y_true)
+        metrics["rate(%)_{:02d}".format(i + 1)]   = agg_rmse(y_pred, y_true, size, factor=100)
+        metrics["recall_{:02d}".format(i + 1)] = agg_rmse(y_pred, y_true, y_true)
+
+    metrics_string = "; ".join("{}: {:.3f}".format(k, v) for k, v in metrics.items())
+    print(metrics_string)
+    input_str = pred_file.split('/')
+    filename = input_str[-1]
+    # Original: metrics_pred_best_weights.json -> metrics_pred_best_weights_new.json
+    json_file = "/".join(input_str[:-1] +
+            ['{}_metrics_pred_best_weights.json'.format(file_type)])
+    save_dict_to_json(metrics, json_file)
+    
+    # average ar
+    average_ar = sum([metrics["cap_{:02d}".format(i + 1)] for i in range(len(label))])/len(label)
+    print(average_ar)
+
+
+if __name__ == "__main__":
+	main()

@@ -5,7 +5,7 @@ WINDOW_SIZE=12
 FEATURE_SIZE=14
 CUM_LABELS=8
 
-ROOT=/home/ybtu/codes.credit.relation.dev/${MODEL_NAME}
+ROOT=/tmp2/ybtu/codes.credit.relation/codes/${MODEL_NAME}
 # cd $ROOT
 DATA_ROOT='/home/cwlin/explainable_credit/data'
 
@@ -26,8 +26,8 @@ batch_size=1
 output_file=$ROOT/experiments/${experiment_type}/${experiment_type}.csv
 echo $output_file
 
-# fold_range=(20 15 10 05 01)
-fold_range=(19 18 17 16 14 13 12 11 9 8 7 6 4 3 2)
+fold_range=(20)
+# fold_range=(19 18 17 16 14 13 12 11 9 8 7 6 4 3 2)
 
 for fold in "${fold_range[@]}"; do
     fold=$(printf "%02d" $fold)

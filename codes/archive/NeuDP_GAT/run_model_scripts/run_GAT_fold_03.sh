@@ -1,24 +1,27 @@
 # /bin/bash
 
-ROOT='/home/ybtu/codes.credit.relation.dev/NeuDP_GAT'
+# TODO: make the ROOT to relative path
+ROOT='/tmp2/ybtu/codes.credit.relation/codes/NeuDP_GAT'
 # cd $ROOT
 DATA_ROOT='/home/cwlin/explainable_credit/data'
 
-MODEL_NAME=NeuDP_GAT
+# MODEL_NAME=NeuDP_GAT_wo_intra # NeuDP_GAT, NeuDP_GAT_wo_intra, NeuDP_GAT_wo_inter
+# MODEL_NAME=NeuDP_GAT_wo_inter
 WINDOW_SIZE=12
 FEATURE_SIZE=14
 CUM_LABELS=8
 
 # Fixed parameters
 device=$1
-experiment_type=$2 # index time expand_len
+experiment_type=$2 # index time expand_len expand_time(for inference only)
 cluster_setting=$3 # industry 
-n_cluster=$4 # 62
+n_cluster=$4 # 14
 lstm_num_units=$5
 intra_gat_hidn_dim=$6
 inter_gat_hidn_dim=$7
 learning_rate=$8
 weight_decay=$9
+MODEL_NAME=${10} # NeuDP_GAT, NeuDP_GAT_wo_intra, NeuDP_GAT_wo_inter
 # fold_start=${10}
 # fold_end=${11}
 max_epoch=100
@@ -33,8 +36,9 @@ all_company_ids_path=$DATA_ROOT/edge_file/all_company_ids.csv
 output_file=$ROOT/experiments/${experiment_type}/${experiment_type}.csv
 echo $output_file
 
-# fold_range=(20 15 10 05 01)
-fold_range=(19 18 17 16 14 13 12 11 9 8 7 6 4 3 2)
+fold_range=(20 15 10 05 01)
+# fold_range=(20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1)
+# fold_range=(20)
 # for fold in $(seq $fold_end -1 $fold_start); do
 for fold in "${fold_range[@]}"; do
     fold=$(printf "%02d" $fold)
