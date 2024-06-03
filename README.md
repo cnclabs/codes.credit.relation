@@ -20,29 +20,6 @@
 ├── kmeans_cluster_50
 ```
 
-# TODO
-- experiments
-1. dataset original (stratefy kfold. k=13)
-    * cross section
-    * FIM
-    * NeuDP batch=256
-    * NeuDP all company
-    * NeuDP_GAT
-        * kmeans
-        * industry
-    * cross time
-    * expanding window
-2. dataset current (train-test-split, 1-fold, train/test/valid has the same y0/y1 ratio)
-    * cross section
-    * FIM
-    * NeuDP batch=256
-    * NeuDP all company
-    * NeuDP_GAT
-        * kmeans
-        * industry
-    * cross time
-    * expanding window
-
 
 ## models 
 - ./baselines/
@@ -81,62 +58,91 @@ experiments template for 1 fold train/test settings
 ```
 # /bin/bash
 
-## experiment settings
-ROOT='/tmp2/cwlin/explainable_credit/codes.credit.relation.dev'
-cd $ROOT
-ws=12
+MODEL_NAME=NeuDP_GAT
+EXPERIMENT_TYPE=expand_len
 
-## training settings
-patience=20
-batch_size=1
-num_layers=2
-lstm_num_units=128
-dropout_rate=0.25
-learning_rate=1e-3
-weight_decay=1e-6
-max_epoch=300
+# training settings
+WINDOW_SIZE=12
+MAX_EPOCH=100
+PATIENCE=20
+BATCH_SIZE=1
+LEARNING_RATE=0.001
+WEIGHT_DECAY=1e-06
+GAMMA=0.9
 
-## training settings
-dir=$ROOT/experiments/gru12_index
-data_dir=$ROOT/data/
+# model architecture settings
+LSTM_NUM_UNITS=32
+CLUSTER_SETTING=industry
+N_CLUSTER=14
+INTRA_GAT_HIDN_DIM=4
+INTER_GAT_HIDN_DIM=4
+
 device=$1
+fold=$2
+fold=$(printf "%02d" $fold)
 
-python3 $ROOT/codes/main_valid.py 
-    --model_dir $dir
-    --data_dir $data_dir
-    --device $device 
-    --all_company_ids_path $data_dir/all_company_ids.csv 
-    --num_epochs $max_epoch 
-    --patience $patience 
-    --batch_size $batch_size 
-    --learning_rate $learning_rate 
-    --weight_decay $weight_decay 
-    --lstm_num_units $lstm_num_units 
-    --dropout_rate $dropout_rate 
-    --num_layers $num_layers 
+run_id="lstm${LSTM_NUM_UNITS}_intra${INTRA_GAT_HIDN_DIM}_inter${INTER_GAT_HIDN_DIM}_lr${LEARNING_RATE}_wd${WEIGHT_DECAY}"
+model_dir=experiments/${MODEL_NAME}/${EXPERIMENT_TYPE}/${CLUSTER_SETTING}_${N_CLUSTER}/fold_${fold}/${MODEL_NAME}_${WINDOW_SIZE}_${EXPERIMENT_TYPE}_${run_id}
+data_dir=/home/cwlin/explainable_credit/data/${EXPERIMENT_TYPE}/time_fold_${fold}
 
-num_epochs=$(cat $dir/num_epochs)
+echo "Model directory: ${model_dir}"
 
-python3 $ROOT/codes/main.py 
-    --model_dir $dir
-    --data_dir $data_dir
-    --device $device 
-    --all_company_ids_path $data_dir/all_company_ids.csv 
-    --num_epochs $max_epoch 
-    --patience $patience 
-    --batch_size $batch_size 
-    --learning_rate $learning_rate 
-    --weight_decay $weight_decay 
-    --lstm_num_units $lstm_num_units 
-    --dropout_rate $dropout_rate 
-    --num_layers $num_layers 
+python3 main_valid.py \
+        --model_name $MODEL_NAME \
+        --device $device \
+        --experiment_type $EXPERIMENT_TYPE \
+        --fold $fold \
+        --max_epoch $MAX_EPOCH \
+        --patience $PATIENCE \
+        --batch_size $BATCH_SIZE \
+        --learning_rate $LEARNING_RATE \
+        --weight_decay $WEIGHT_DECAY \
+        --gamma $GAMMA \
+        --lstm_num_units $LSTM_NUM_UNITS \
+        --cluster_setting $CLUSTER_SETTING \
+        --n_cluster $N_CLUSTER \
+        --intra_gat_hidn_dim $INTRA_GAT_HIDN_DIM \
+        --inter_gat_hidn_dim $INTER_GAT_HIDN_DIM &&
 
-python3 $ROOT/codes/report.py
-    --pred_file $dir/pred_test.csv 
-    --label_file $data_dir/test_cum.csv
+num_epochs=$(cat $model_dir/num_epochs) &&
 
-python -c "import json; print('\n'.join(str(v) for k, v in json.load(open('$dir/test_metrics_pred_best_weights.json')).items() if k.startswith('cap')))" >> $dir/AR
+python3 main.py \
+        --model_name $MODEL_NAME \
+        --device $device \
+        --experiment_type $EXPERIMENT_TYPE \
+        --fold $fold \
+        --num_epochs $num_epochs \
+        --batch_size $BATCH_SIZE \
+        --learning_rate $LEARNING_RATE \
+        --weight_decay $WEIGHT_DECAY \
+        --gamma $GAMMA \
+        --lstm_num_units $LSTM_NUM_UNITS \
+        --cluster_setting $CLUSTER_SETTING \
+        --n_cluster $N_CLUSTER \
+        --intra_gat_hidn_dim $INTRA_GAT_HIDN_DIM \
+        --inter_gat_hidn_dim $INTER_GAT_HIDN_DIM &&
 
-python -c "import json; print('\n'.join(str(v) for k, v in json.load(open('$dir/test_metrics_pred_best_weights.json')).items() if k.startswith('recall')))" >> $dir/RMSNE
+python3 predict.py \
+        --model_name $MODEL_NAME \
+        --device $device \
+        --experiment_type $EXPERIMENT_TYPE \
+        --fold $fold \
+        --data_file test_cum.gz \
+        --restore_dir last_weights \
+        --batch_size $BATCH_SIZE \
+        --learning_rate $LEARNING_RATE \
+        --weight_decay $WEIGHT_DECAY \
+        --gamma $GAMMA \
+        --lstm_num_units $LSTM_NUM_UNITS \
+        --cluster_setting $CLUSTER_SETTING \
+        --n_cluster $N_CLUSTER \
+        --intra_gat_hidn_dim $INTRA_GAT_HIDN_DIM \
+        --inter_gat_hidn_dim $INTER_GAT_HIDN_DIM &&
 
+python3 report.py \
+        --pred_file $model_dir/${MODEL_NAME}_pred_test.csv \
+        --label_file $data_dir/test_cum.gz &&
+
+python -c "import json; print('\n'.join(str(v) for k, v in json.load(open('$model_dir/test_metrics_pred_best_weights.json')).items() if k.startswith('cap')))" >> $model_dir/AR &&
+python -c "import json; print('\n'.join(str(v) for k, v in json.load(open('$model_dir/test_metrics_pred_best_weights.json')).items() if k.startswith('recall')))" >> $model_dir/RMSNE  
 ```
