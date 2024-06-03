@@ -1,4 +1,5 @@
-import click
+import os
+import argparse
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -7,7 +8,35 @@ from subprocess import check_call
 from utils.config import DATA_DIR, WINDOW_SIZE
 from utils.model_utils import save_dict_to_json
 
+from main import create_experiment_directory
 from ar_cap import cap_ar_score
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    # experiments settings
+    parser.add_argument('--model_name', choices=['NeuDP_GAT', 'NeuDP'], required=True)
+    parser.add_argument('--experiment_type', required=True, choices=["index", "time", "expand_len"], help="dataset type")
+    parser.add_argument('--fold', required=True, type=int, help="fold number of the data")
+
+    # training settings
+    parser.add_argument('--batch_size', default=1, type=int)
+    parser.add_argument('--learning_rate', default=0.001, type=float, help='1e-3, 1e-4, 1e-5')
+    parser.add_argument('--weight_decay', default=0.000001, type=float, help='1e-4, 1e-5, 1e-6, l2 regularization')
+    parser.add_argument('--gamma', default=0.9, type=float, help='exponential learning rate scheduler, lr = lr_0 * gamma ^ epoch')
+
+    # model architecture settings
+    parser.add_argument('--lstm_num_units', type=int, required=True)
+    ## for NeuDP_GAT
+    parser.add_argument('--cluster_setting', choices=['industry', 'kmeans'], default=None, help="company clustering method")
+    parser.add_argument('--n_cluster', default=None, help="number of cluster, e.g. 100, ./data_dir/cluster_100, that contains inner/outer edges and company_to_sector_idx.pkl")
+    parser.add_argument('--intra_gat_hidn_dim', type=int, default=None)
+    parser.add_argument('--inter_gat_hidn_dim', type=int, default=None)
+
+    parser.add_argument('--pred_file', required=True, help='prediction file')
+    parser.add_argument('--label_file', required=True, help='label file')
+
+    return parser.parse_args()
 
 def clean_data(file_path):
     #FIXME: manually handle abnormal syntax in file
@@ -34,10 +63,15 @@ def agg_rmse(y_pred, y_true, norm_factor=1, factor=1):
              np.inf) * (factor ** 2)
     return np.sqrt(np.mean(scores))
 
-@click.command()
-@click.option('--pred_file', default=None, help='prediction file')
-@click.option('--label_file', default=None, help='label file')
-def main(pred_file, label_file):
+
+def main():
+
+    args = parse_args()
+    model_dir, data_dir = create_experiment_directory(args, DATA_DIR, WINDOW_SIZE)
+
+    pred_file = os.path.join(model_dir, args.pred_file)
+    label_file = os.path.join(data_dir, args.label_file)
+
     file_type = label_file.split('/')[-1].split('_')[0]
     # print(file_type)
 

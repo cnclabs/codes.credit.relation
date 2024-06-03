@@ -9,9 +9,6 @@ import json
 
 import torch
 import torch.optim as optim
-# import torch.nn.functional as F
-# from torch.utils.data import Dataset, DataLoader
-# import torch.utils.data as data
 from torch.optim.lr_scheduler import ExponentialLR
 
 from utils.config import DATA_DIR, EDGE_FILE_DIR, COMPANY_IDS
